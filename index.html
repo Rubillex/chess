@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<!--    jQuery-->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+            integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
+            crossorigin="anonymous"></script>
+
+<!--    chessboard-->
+    <link rel="stylesheet"
+          href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+          integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU"
+          crossorigin="anonymous">
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"
+            integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD"
+            crossorigin="anonymous"></script>
+
+<!--    chess.js-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!--    pusher-->
+    <script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
+    <title>Chess</title>
+</head>
+<body>
+<div id="myBoard" style="width: 400px"></div>
+
+<button id="ready">Готов</button>
+<div>Игрок 1: <span id="firstReady">Не готов</span></div>
+<div>Игрок 2: <span id="secondReady">Не готов</span></div>
+<div><span id="timerFirst">11:00</span></div>
+<div><span id="timerSecond">11:00</span></div>
+<div><span id="drawMessage"></span></div>
+<button id="surrender">Сдаться</button>
+<button id="draw">Предложить ничью</button>
+<script src="./public/app.js"></script>
+<script src="./public/timers.js"></script>
+<script src="./public/readyChanges.js"></script>
+<script src="./public/pusherEvents.js"></script>
+<script src="./public/actions.js"></script>
+</body>
+</html>
