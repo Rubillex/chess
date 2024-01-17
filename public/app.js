@@ -34,18 +34,19 @@ if (role == ROLE_BLACK) {
 }
 
 let board = null;
+let $board = $('#myBoard');
 let game = new Chess();
-let whiteSquareGrey = '#a9a9a9';
-let blackSquareGrey = '#696969';
+let squareToHighlight = null;
+let squareClass = 'square-55d63';
 
 let config = {
     draggable: true,
     position: 'start',
     onDragStart: onDragStart,
     onDrop: onDrop,
-    onMouseoutSquare: onMouseoutSquare,
-    onMouseoverSquare: onMouseoverSquare,
-    onSnapEnd: onSnapEnd
+    onSnapEnd: onSnapEnd,
+    onMoveEnd: onMoveEnd,
+    onDragMove: onDragMove,
 };
 
 board = Chessboard('myBoard', config);
@@ -63,21 +64,17 @@ getState();
 /** Запрос на завершение игры */
 
 /** Логика игры */
-
-function removeGreySquares() {
-    $('#myBoard .square-55d63').css('background', '')
+function removeHighlights (color) {
+    $board.find('.' + squareClass)
+        .removeClass('highlight-' + color)
 }
 
-function greySquare(square) {
-    let $square = $('#myBoard .square-' + square);
-
-    let background = whiteSquareGrey;
-    if ($square.hasClass('black-3c85d')) {
-        background = blackSquareGrey
-    }
-
-    $square.css('background', background)
+function onMoveEnd () {
+    const highlightColor = game.turn() === ROLE_BLACK ? 'white' : 'black';
+    $board.find('.square-' + squareToHighlight)
+        .addClass('highlight-' + highlightColor)
 }
+
 
 function onDragStart(source, piece) {
     if (currentGameState != GAME_STATES.playing) {
@@ -98,11 +95,23 @@ function onDragStart(source, piece) {
         return false
     }
 
+    const highlightColor = game.turn() === ROLE_WHITE ? 'white' : 'black';
+    removeHighlights(highlightColor);
+    $board.find('.square-' + source).addClass('highlight-' + highlightColor);
+
     oldFen = game.fen();
 }
 
+function onDragMove (newLocation, oldLocation, source,
+                     piece, position, orientation) {
+    const highlightColor = game.turn() === ROLE_WHITE ? 'white' : 'black';
+    removeHighlights(highlightColor);
+    removeHighlights(game.turn() === ROLE_WHITE ? 'black' : 'white');
+    $board.find('.square-' + source).addClass('highlight-' + highlightColor);
+    $board.find('.square-' + newLocation).addClass('highlight-' + highlightColor);
+}
+
 function onDrop(source, target) {
-    removeGreySquares();
 
     // see if the move is legal
     let move = game.move({
@@ -112,33 +121,14 @@ function onDrop(source, target) {
     });
 
     // illegal move
-    if (move === null) return 'snapback'
-}
+    if (move === null) return 'snapback';
 
-function onMouseoverSquare(square, piece) {
-    if (currentGameState != GAME_STATES.playing) {
-        return false;
-    }
-    // if role is not that side's turn
-    if (game.turn() !== role) {
-        return false;
-    }
-    // get list of possible moves for this square
-    let moves = game.moves({
-        square: square,
-        verbose: true
-    });
-
-    // exit if there are no moves available for this square
-    if (moves.length === 0) return;
-
-    // highlight the square they moused over
-    greySquare(square);
-
-    // highlight the possible squares for this piece
-    for (let i = 0; i < moves.length; i++) {
-        greySquare(moves[i].to)
-    }
+    // highlight white's move
+    const highlightColor = game.turn() === ROLE_BLACK ? 'white' : 'black';
+    removeHighlights(highlightColor);
+    $board.find('.square-' + source).addClass('highlight-' + highlightColor);
+    $board.find('.square-' + target).addClass('highlight-' + highlightColor);
+    squareToHighlight = move.to;
 }
 
 function onMouseoutSquare(square, piece) {
