@@ -111,9 +111,52 @@ function onDragMove (newLocation, oldLocation, source,
     $board.find('.square-' + newLocation).addClass('highlight-' + highlightColor);
 }
 
+function isPromoting(fen, move) {
+    const chess = new Chess(fen);
+
+    const piece = chess.get(move.from);
+
+    if (piece?.type !== "p") {
+        return false;
+    }
+
+    if (piece.color !== chess.turn()) {
+        return false;
+    }
+
+    if (!["1", "8"].some((it) => move.to.endsWith(it))) {
+        return false;
+    }
+
+    return chess
+        .moves({ square: move.from, verbose: true })
+        .map((it) => it.to)
+        .includes(move.to);
+}
+
+let sourceTemp = null;
+let targetTemp = null;
+
 function onDrop(source, target) {
 
     // see if the move is legal
+    if (isPromoting(game.fen(), { from: source, to: target })) {
+        sourceTemp = source;
+        targetTemp = target;
+        $('#promotionModal').modal('show');
+        const qButton = document.getElementById('qButton');
+        const rButton = document.getElementById('rButton');
+
+        rButton.addEventListener('click', () => {
+            promote('r');
+        });
+
+        qButton.addEventListener('click', () => {
+            promote('q');
+        });
+        return;
+    };
+
     let move = game.move({
         from: source,
         to: target,
@@ -131,8 +174,27 @@ function onDrop(source, target) {
     squareToHighlight = move.to;
 }
 
-function onMouseoutSquare(square, piece) {
-    removeGreySquares()
+function promote(type) {
+    $('#promotionModal').modal('hide');
+    console.log(type);
+    let move = game.move({
+        from: sourceTemp,
+        to: targetTemp,
+        promotion: type // NOTE: always promote to a queen for example simplicity
+    });
+
+    console.log(move);
+
+    // illegal move
+    if (move === null) return 'snapback';
+
+    // highlight white's move
+    const highlightColor = game.turn() === ROLE_BLACK ? 'white' : 'black';
+    removeHighlights(highlightColor);
+    $board.find('.square-' + sourceTemp).addClass('highlight-' + highlightColor);
+    $board.find('.square-' + targetTemp).addClass('highlight-' + highlightColor);
+    squareToHighlight = move.to;
+    board.position(game.fen());
 }
 
 function onSnapEnd() {
@@ -193,6 +255,11 @@ async function getState() {
             }
 
             board.position(lastElement.fen);
+            const highlightColor = game.turn() === ROLE_BLACK ? 'white' : 'black';
+            removeHighlights(highlightColor);
+            removeHighlights(game.turn() === ROLE_WHITE ? 'black' : 'white');
+            $board.find('.square-' + source).addClass('highlight-' + highlightColor);
+            $board.find('.square-' + newLocation).addClass('highlight-' + highlightColor);
         }
     }
 }
