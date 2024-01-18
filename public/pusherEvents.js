@@ -115,6 +115,18 @@ channel.bind("make-move", (data) => {
             1000
         );
     }
+
+    const highlightColor = game.turn() === ROLE_BLACK ? 'white' : 'black';
+    removeHighlights(highlightColor);
+
+    const history = game.history();
+
+    if (history.length >= 2) {
+        const last2 = history.slice(-2);
+        removeHighlights(game.turn() === ROLE_WHITE ? 'black' : 'white');
+        $board.find('.square-' + last2[0]).addClass('highlight-' + highlightColor);
+        $board.find('.square-' + last2[1]).addClass('highlight-' + highlightColor);
+    }
 });
 
 channel.bind('finish-game', function (data) {
