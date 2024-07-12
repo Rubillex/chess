@@ -37,7 +37,13 @@ let board = null;
 let $board = $('#myBoard');
 let game = new Chess();
 let squareToHighlight = null;
+let selectedSquare = null;
 let squareClass = 'square-55d63';
+
+$board.on('click', '.square-55d63', function() {
+    let square = $(this).data('square');
+    onSquareClick(square);
+});
 
 let config = {
     draggable: true,
@@ -47,6 +53,7 @@ let config = {
     onSnapEnd: onSnapEnd,
     onMoveEnd: onMoveEnd,
     onDragMove: onDragMove,
+    onSquareClick: onSquareClick,
 };
 
 board = Chessboard('myBoard', config);
@@ -95,6 +102,8 @@ function onDragStart(source, piece) {
         return false
     }
 
+    selectedSquare = source;
+
     const highlightColor = game.turn() === ROLE_WHITE ? 'white' : 'black';
     removeHighlights(highlightColor);
     $board.find('.square-' + source).addClass('highlight-' + highlightColor);
@@ -109,6 +118,65 @@ function onDragMove (newLocation, oldLocation, source,
     removeHighlights(game.turn() === ROLE_WHITE ? 'black' : 'white');
     $board.find('.square-' + source).addClass('highlight-' + highlightColor);
     $board.find('.square-' + newLocation).addClass('highlight-' + highlightColor);
+}
+
+function onSquareClick(square) {
+    if (currentGameState != GAME_STATES.playing) {
+        return false;
+    }
+    // do not pick up pieces if the game is over
+    if (game.game_over()) {
+        return false;
+    }
+
+    // if role is not that side's turn
+    if (game.turn() !== role) {
+        return false;
+    }
+
+    const highlightColor = game.turn() === ROLE_WHITE ? 'white' : 'black';
+    if (selectedSquare) {
+        // Try to make the move
+        if (isPromoting(game.fen(), { from: selectedSquare, to: square })) {
+            sourceTemp = selectedSquare;
+            targetTemp = square;
+            $('#promotionModal').modal('show');
+            const qButton = document.getElementById('qButton');
+            const rButton = document.getElementById('rButton');
+
+            rButton.addEventListener('click', () => {
+                promote('r');
+            });
+
+            qButton.addEventListener('click', () => {
+                promote('q');
+            });
+            return;
+        };
+
+        let move = game.move({
+            from: selectedSquare,
+            to: square,
+            promotion: 'q' // NOTE: always promote to a queen for example simplicity
+        });
+
+        if (move === null) {
+            // Invalid move
+            selectedSquare = null;
+            $board.find('.square-55d63').removeClass('highlight-' + highlightColor);
+            return;
+        } else {
+            // Valid move
+            selectedSquare = null;
+            board.position(game.fen());
+            $board.find('.square-55d63').removeClass('highlight-' + highlightColor);
+            return;
+        }
+    }
+
+    // Select the square
+    selectedSquare = square;
+    $board.find('.square-' + square).addClass('highlight-' + highlightColor);
 }
 
 function isPromoting(fen, move) {
@@ -172,6 +240,7 @@ function onDrop(source, target) {
     $board.find('.square-' + source).addClass('highlight-' + highlightColor);
     $board.find('.square-' + target).addClass('highlight-' + highlightColor);
     squareToHighlight = move.to;
+    selectedSquare = null;
 }
 
 function promote(type) {
